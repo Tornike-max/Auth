@@ -3,17 +3,16 @@ from django.contrib.auth.models import User
 from PIL import Image
 
 
-# Extending User Model Using a One-To-One Link
 class Profile(models.Model):
+    objects = None
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     avatar = models.ImageField(default='default.jpg', upload_to='profile_images')
     bio = models.TextField()
 
     def __str__(self):
-        return self.user.username
+        return self.user.first_name
 
-    # resizing images
     def save(self, *args, **kwargs):
         super().save()
 

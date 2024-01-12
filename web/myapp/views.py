@@ -7,6 +7,11 @@ from django.core.mail import send_mail
 from .serializers import UserSerializer, PhotoSerializer
 from django.shortcuts import render
 from .models import Photo
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Photo
+from .serializers import PhotoSerializer
 
 User = get_user_model()
 
@@ -31,6 +36,7 @@ class RegisterView(APIView):
     def get(self, request, *args, **kwargs):
         return render(request, 'register.html')
 
+
 class LoginView(APIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
@@ -49,7 +55,7 @@ class LoginView(APIView):
             }, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    
+
     def get(self, request, *args, **kwargs):
         return render(request, 'login.html')
 
@@ -81,12 +87,12 @@ class ResetPasswordView(APIView):
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class PhotoUploadView(generics.CreateAPIView):
-    serializer_class = PhotoSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+# class PhotoUploadView(generics.CreateAPIView):
+#     serializer_class = PhotoSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+#
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
 
 
 class ChangePasswordView(APIView):
@@ -103,3 +109,8 @@ class ChangePasswordView(APIView):
             return Response({'message': 'Password changed successfully'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid old password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+def display_uploaded_photo(request):
+    photo = Photo.objects.first()  # Assuming you want to display the first uploaded photo
+    return render(request, 'upload_photo.html', {'photo': photo})

@@ -10,11 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'email', 'password')
 
     def create(self, validated_data):
-        password = validated_data.pop('password', None) 
+        password = validated_data.pop('password', None)
         user = CustomUser.objects.create_user(**validated_data, password=password)
         return user
+
 
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ('id', 'image')
+        fields = ['image']

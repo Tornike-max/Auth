@@ -1,27 +1,26 @@
-<html>
+<html lang="en">
   <head>
-    <title>User Registration</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
   </head>
   <body>
-    <h2>User Registration</h2>
-    <form method="post">
+    <h2>Register</h2>
+    <form method="post" action="{% url 'register' %}">
       {% csrf_token %}
-      <label for="first_name">First Name:</label><br />
-      <input type="text" id="first_name" name="first_name" /><br />
-
-      <label for="last_name">Last Name:</label><br />
-      <input type="text" id="last_name" name="last_name" /><br />
-
-      <label for="email">Email:</label><br />
-      <input type="email" id="email" name="email" /><br />
-
-      <label for="username">Username:</label><br />
-      <input type="text" id="username" name="username" /><br />
-
-      <label for="password">Password:</label><br />
-      <input type="password" id="password" name="password" /><br />
-
-      <input type="submit" value="Register" />
+      <label for="first_name">First Name:</label>
+      <input type="text" name="first_name" required />
+      <label for="last_name">Last Name:</label>
+      <input type="text" name="last_name" required />
+      <label for="username">User Name:</label>
+      <input type="text" name="username" required />
+      <label for="email">Email:</label>
+      <input type="email" name="email" required />
+      <label for="password">Password:</label>
+      <input type="password" name="password" required />
+      <label for="repeat_password">Repeat Password:</label>
+      <input type="password" name="repeat_password" required />
+      <button type="submit">Register</button>
     </form>
   </body>
 </html>

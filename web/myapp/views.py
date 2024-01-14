@@ -8,6 +8,7 @@ from .serializers import UserSerializer, PhotoSerializer
 from django.shortcuts import render
 from .models import Photo
 
+
 User = get_user_model()
 
 
@@ -81,13 +82,6 @@ class ResetPasswordView(APIView):
             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class PhotoUploadView(generics.CreateAPIView):
-    serializer_class = PhotoSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
 
 class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -103,3 +97,33 @@ class ChangePasswordView(APIView):
             return Response({'message': 'Password changed successfully'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid old password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'change_password.html')
+
+
+
+class PhotoUploadView(generics.ListCreateAPIView):
+    serializer_class = PhotoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Photo.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class UpdatePhotoView(generics.RetrieveUpdateAPIView):
+    serializer_class = PhotoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Photo.objects.filter(user=self.request.user)
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)

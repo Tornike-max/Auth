@@ -58,30 +58,6 @@ class LoginView(APIView):
     def get(self, request, *args, **kwargs):
         return render(request, 'login.html')
 
-# class ForgotPasswordView(APIView):
-#     permission_classes = [permissions.AllowAny]
-
-#     def create(self, request, *args, **kwargs):
-#         email = request.data.get('email')
-#         user = User.objects.filter(email=email).first()
-
-#         if user:
-#             # Generate a random restoration code (you can customize the length and format)
-#             restoration_code = ''.join([str(randint(0, 9)) for _ in range(6)])
-
-#             # Store the restoration code in the user's profile or database
-#             user.profile.restoration_code = restoration_code
-#             user.profile.save()
-
-#             # Return the restoration code in the API response
-#             return Response({'message': 'Restoration code generated successfully', 'restoration_code': restoration_code}, status=status.HTTP_200_OK)
-#         else:
-#             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-
-#     def get(self, request, *args, **kwargs):
-#         return render(request, 'forgot_password.html') 
-
-
 
 class ResetPasswordView(APIView):
     permission_classes = [permissions.AllowAny]

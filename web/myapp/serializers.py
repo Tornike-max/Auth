@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        validated_data.pop('repeat_password', None)  # Remove repeat_password from the data
+        validated_data.pop('repeat_password', None) 
         user = CustomUser.objects.create_user(**validated_data, password=password)
         return user
 

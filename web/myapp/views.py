@@ -1,16 +1,18 @@
+
 from rest_framework import generics, permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import authenticate, login, get_user_model
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.core.mail import send_mail
 from .serializers import UserSerializer, PhotoSerializer
 from django.shortcuts import render
 from .models import Photo
+from django.contrib.auth.hashers import check_password
+from django.middleware.csrf import get_token
 
 
 User = get_user_model()
-
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -33,6 +35,8 @@ class RegisterView(APIView):
         return render(request, 'register.html')
 
 class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -54,21 +58,34 @@ class LoginView(APIView):
     def get(self, request, *args, **kwargs):
         return render(request, 'login.html')
 
+# class ForgotPasswordView(APIView):
+#     permission_classes = [permissions.AllowAny]
 
-class ForgotPasswordView(APIView):
-    def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        user = User.objects.filter(email=email).first()
+#     def create(self, request, *args, **kwargs):
+#         email = request.data.get('email')
+#         user = User.objects.filter(email=email).first()
 
-        if user:
-            reset_token = "generated_reset_token"
-            send_mail('Password Reset', f'Your reset token is: {reset_token}', 'from@example.com', [email])
-            return Response({'message': 'Reset token sent to your email'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+#         if user:
+#             # Generate a random restoration code (you can customize the length and format)
+#             restoration_code = ''.join([str(randint(0, 9)) for _ in range(6)])
+
+#             # Store the restoration code in the user's profile or database
+#             user.profile.restoration_code = restoration_code
+#             user.profile.save()
+
+#             # Return the restoration code in the API response
+#             return Response({'message': 'Restoration code generated successfully', 'restoration_code': restoration_code}, status=status.HTTP_200_OK)
+#         else:
+#             return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+#     def get(self, request, *args, **kwargs):
+#         return render(request, 'forgot_password.html') 
+
 
 
 class ResetPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         new_password = request.data.get('new_password')
@@ -77,11 +94,12 @@ class ResetPasswordView(APIView):
         if user:
             user.set_password(new_password)
             user.save()
-            return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)
+            return render(request, 'reset_password.html', {'message': 'Password reset successful'})
         else:
-            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return render(request, 'reset_password.html', {'message': 'User not found'})
 
-
+    def get(self, request, *args, **kwargs):
+        return render(request, 'reset_password.html') 
 
 class ChangePasswordView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -91,21 +109,24 @@ class ChangePasswordView(APIView):
         new_password = request.data.get('new_password')
 
         user = self.request.user
-        if user.check_password(old_password):
-            user.set_password(new_password)
-            user.save()
-            return Response({'message': 'Password changed successfully'}, status=status.HTTP_200_OK)
-        else:
+
+        if not user.is_authenticated:
+            return Response({'message': 'User not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not check_password(old_password, user.password):
             return Response({'message': 'Invalid old password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({'message': 'Password changed successfully'}, status=status.HTTP_200_OK)
 
     def get(self, request, *args, **kwargs):
         return render(request, 'change_password.html')
 
-
-
 class PhotoUploadView(generics.ListCreateAPIView):
-    serializer_class = PhotoSerializer
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PhotoSerializer
 
     def get_queryset(self):
         return Photo.objects.filter(user=self.request.user)
@@ -114,16 +135,21 @@ class PhotoUploadView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 class UpdatePhotoView(generics.RetrieveUpdateAPIView):
-    serializer_class = PhotoSerializer
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PhotoSerializer
 
     def get_queryset(self):
         return Photo.objects.filter(user=self.request.user)
-
 
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         logout(request)
-        return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+        
+        csrf_token = get_token(request)
+        
+        return Response({'message': 'Logout successful', 'csrf_token': csrf_token}, status=status.HTTP_200_OK)
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'logout.html')
